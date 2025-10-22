@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Test Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0db88a9e7d.js" crossorigin="anonymous"></script>
+<style>
+body { font-family: 'Poppins', sans-serif; margin:0; padding:0; background: linear-gradient(135deg,#f6d365,#fda085); min-height:100vh; }
+.container { max-width:1000px; margin:auto; padding:20px; }
+h1,h2 { text-align:center; color:#fff; text-shadow:2px 2px 5px rgba(0,0,0,0.3); margin-bottom:20px; font-weight:700;}
+button { cursor:pointer; border:none; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:0.3s; font-size:16px; padding:10px 20px; border-radius:30px;}
+button:hover{ transform:scale(1.08);}
+.test-card { background: linear-gradient(135deg,#ff758c,#ff7eb3); padding:25px; margin:20px 0; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,0.3); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; transition:0.3s;}
+.test-card:hover{ transform:translateY(-5px); }
+.test-info { flex:1; }
+.test-info strong { font-size:1.4rem; color:#fff; text-shadow:1px 1px 2px rgba(0,0,0,0.5); }
+.test-info p { margin:5px 0; color:#f0f0f0; font-weight:500; }
+.status { padding:10px 18px; border-radius:25px; font-weight:600; min-width:120px; text-align:center; color:white; box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+.locked { background:#6c757d; }
+.active { background:#28a745; animation: pulse 1.5s infinite; }
+.closed { background:#dc3545; }
+@keyframes pulse { 0%{ transform:scale(1); } 50%{ transform:scale(1.05); } 100%{ transform:scale(1); } }
+
+/* Glow Gradient Button */
+.glow-btn {
+    background: linear-gradient(90deg,#f7971e,#ffd200,#f7971e);
+    background-size:200% 200%;
+    color:#222; font-weight:600;
+    box-shadow:0 0 15px rgba(255,255,0,0.5);
+    border-radius:30px;
+    padding:10px 20px;
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:16px; transition:0.3s;
+    animation: gradientShift 3s ease infinite;
+}
+.glow-btn:hover { transform:scale(1.08); box-shadow:0 0 25px rgba(255,255,0,0.8);}
+@keyframes gradientShift {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.card-buttons button { display:inline-flex; margin:5px 5px 0 0; background:#007bff; color:white; border-radius:50%; width:50px; height:50px; font-size:20px; justify-content:center; align-items:center; box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.card-buttons button:hover{ background:#0056b3; }
+.user-button button { background:#ffc107; color:#222; border-radius:50%; width:55px; height:55px; font-size:24px; justify-content:center; align-items:center; display:inline-flex; box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.user-button button:hover{ background:#e0a800; }
+
+/* Modal */
+.modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); }
+.modal-content { background:white; margin:10% auto; padding:20px; border-radius:20px; width:90%; max-width:500px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+.close { position:absolute; top:10px; right:20px; font-size:25px; font-weight:bold; cursor:pointer; color:#333; }
+.close:hover{ color:#ff0000; }
+.modal input, .modal label { width:100%; margin:8px 0; padding:10px; border-radius:10px; border:1px solid #ccc; font-weight:500; }
+.modal button { width:100%; margin-top:10px; background:linear-gradient(90deg,#28a745,#a0ff60); color:#222; border-radius:30px; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px; animation: gradientShift 3s ease infinite;}
+.modal button:hover{ background:#218838;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎓 Admin Test Manager</h1>
+
+<div id="loginSection">
+  <h2>Login</h2>
+  <input type="password" id="adminPassword" placeholder="Admin Password">
+  <button class="glow-btn" onclick="login()"><i class="fas fa-lock"></i> Login</button>
+</div>
+
+<div id="adminSection" style="display:none;">
+  <div style="text-align:center; margin-bottom:20px;">
+    <button class="glow-btn" onclick="openModal()"><i class="fas fa-plus"></i> Add / Upload</button>
+  </div>
+  <h2>Existing Tests</h2>
+  <div id="testsList"></div>
+  <div class="user-button" style="text-align:center; margin-top:20px;">
+    <button onclick="openUserView()"><i class="fas fa-eye"></i></button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2>Add New Test</h2>
+    <form id="modalForm">
+      <input type="text" id="modalTestName" placeholder="Test Name" required>
+      <input type="url" id="modalTestLink" placeholder="Test Link" required>
+      <label>Open Date & Time:</label>
+      <input type="datetime-local" id="modalTestOpen" required>
+      <label>Close Date & Time:</label>
+      <input type="datetime-local" id="modalTestClose" required>
+      <button type="submit"><i class="fas fa-plus-circle"></i> Add Test</button>
+    </form>
+    <hr>
+    <h3>Or Upload JSON</h3>
+    <input type="file" id="jsonUpload" onchange="uploadJSON(event)">
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD="admin123";
+let tests=JSON.parse(localStorage.getItem('tests'))||[];
+
+function login(){
+  const pw=document.getElementById('adminPassword').value;
+  if(pw===ADMIN_PASSWORD){
+    document.getElementById('loginSection').style.display='none';
+    document.getElementById('adminSection').style.display='block';
+    renderAdmin();
+  } else alert("Incorrect password!");
+}
+function openModal(){document.getElementById('modal').style.display='block';}
+function closeModal(){document.getElementById('modal').style.display='none';}
+window.onclick=function(event){ if(event.target==document.getElementById('modal')) closeModal(); }
+
+document.getElementById('modalForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=document.getElementById('modalTestName').value;
+  const link=document.getElementById('modalTestLink').value;
+  const openTime=document.getElementById('modalTestOpen').value;
+  const closeTime=document.getElementById('modalTestClose').value;
+  tests.push({name,link,openTime,closeTime});
+  localStorage.setItem('tests',JSON.stringify(tests));
+  renderAdmin(); closeModal();
+});
+
+function uploadJSON(event){
+  const file=event.target.files[0];
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const imported=JSON.parse(e.target.result);
+    tests=tests.concat(imported);
+    localStorage.setItem('tests',JSON.stringify(tests));
+    renderAdmin(); closeModal();
+  }
+  reader.readAsText(file);
+}
+
+function renderAdmin(){
+  const testsList=document.getElementById('testsList');
+  testsList.innerHTML='';
+  const now=new Date();
+  tests.forEach((test,index)=>{
+    const open=new Date(test.openTime);
+    const close=new Date(test.closeTime);
+    const day=open.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+    const time=open.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    let status='locked'; let countdown=0;
+    if(now<open){ status='locked'; countdown=Math.ceil((open-now)/1000); }
+    else if(now>=open && now<=close){ status='active'; countdown=Math.ceil((close-now)/1000); }
+    else{ status='closed'; }
+
+    const div=document.createElement('div');
+    div.classList.add('test-card');
+    div.innerHTML=`
+      <div class="test-info">
+        <strong>${test.name}</strong>
+        <p>📅 ${day}</p>
+        <p>⏰ ${time}</p>
+        <p>Status: <span class="countdown">${formatTime(countdown)}</span></p>
+      </div>
+      <div>
+        <span class="status ${status}">${status.toUpperCase()}</span>
+        <div class="card-buttons">
+          <button onclick="editTest(${index})"><i class="fas fa-edit"></i></button>
+          <button onclick="deleteTest(${index})"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `;
+    testsList.appendChild(div);
+  });
+}
+
+function editTest(index){
+  const t=tests[index];
+  document.getElementById('modalTestName').value=t.name;
+  document.getElementById('modalTestLink').value=t.link;
+  document.getElementById('modalTestOpen').value=t.openTime;
+  document.getElementById('modalTestClose').value=t.closeTime;
+  tests.splice(index,1);
+  localStorage.setItem('tests',JSON.stringify(tests));
+  openModal();
+}
+
+function deleteTest(index){ if(confirm("Are you sure?")){ tests.splice(index,1); localStorage.setItem('tests',JSON.stringify(tests)); renderAdmin(); } }
+function openUserView(){ window.open('user.html','_blank'); }
+
+setInterval(renderAdmin,1000);
+function formatTime(seconds){ if(!seconds||seconds<0) return "0h 0m 0s"; const h=Math.floor(seconds/3600); const m=Math.floor((seconds%3600)/60); const s=seconds%60; return `${h}h ${m}m ${s}s`; }
+</script>
+</body>
+</html>

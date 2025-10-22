@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Test Links</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0db88a9e7d.js" crossorigin="anonymous"></script>
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    margin:0; padding:0;
+    background: linear-gradient(135deg,#89f7fe,#66a6ff);
+    min-height:100vh;
+}
+.container { max-width:1000px; margin:auto; padding:20px; }
+h1 { text-align:center; color:#fff; text-shadow:2px 2px 5px rgba(0,0,0,0.3); margin-bottom:40px; font-weight:700;}
+.test-card {
+    background: linear-gradient(135deg,#ff758c,#ff7eb3);
+    padding:25px;
+    margin:20px 0;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.3);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    transition:0.3s;
+}
+.test-card:hover { transform:translateY(-5px); box-shadow:0 20px 40px rgba(0,0,0,0.35);}
+.test-info { flex:1; }
+.test-info strong { font-size:1.5rem; color:#fff; text-shadow:1px 1px 3px rgba(0,0,0,0.5); }
+.test-info p { margin:5px 0; color:#f0f0f0; font-weight:500; }
+.status { padding:10px 18px; border-radius:25px; font-weight:600; min-width:120px; text-align:center; color:white; box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+.locked { background:#6c757d; }
+.active { background:#28a745; animation: pulse 1.5s infinite; }
+.closed { background:#dc3545; }
+@keyframes pulse {
+    0%{ transform:scale(1); }
+    50%{ transform:scale(1.05); }
+    100%{ transform:scale(1); }
+}
+/* Gradient Glow Button */
+a.start-test {
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+    padding:12px 25px;
+    border-radius:30px;
+    background: linear-gradient(90deg,#f7971e,#ffd200,#f7971e);
+    background-size:200% 200%;
+    color:#222;
+    transition:0.3s;
+    box-shadow:0 0 15px rgba(255,255,0,0.5);
+    font-size:16px;
+    animation: gradientShift 3s ease infinite;
+    margin-top:10px;
+}
+a.start-test:hover { transform:scale(1.08); box-shadow:0 0 25px rgba(255,255,0,0.8); }
+@keyframes gradientShift {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+.countdown { font-weight:700; color:#ffd700; display:block; margin-top:5px; }
+@media(max-width:600px){ .test-card{ flex-direction:column; text-align:center; } .status{ margin-top:10px; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎓 Online Test Links</h1>
+<div id="userView"></div>
+</div>
+
+<script>
+let tests = JSON.parse(localStorage.getItem('tests')) || [];
+const userView = document.getElementById('userView');
+
+function renderUserView(){
+    userView.innerHTML='';
+    const now = new Date();
+    tests.forEach(test=>{
+        const open = new Date(test.openTime);
+        const close = new Date(test.closeTime);
+        const day = open.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+        const time = open.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        let status='locked';
+        let countdownHTML='';
+        let linkHTML='';
+
+        if(now<open){
+            status='locked';
+            countdownHTML = `Opens in: <span class="countdown">${formatTime(Math.ceil((open-now)/1000))}</span>`;
+        } else if(now>=open && now<=close){
+            status='active';
+            countdownHTML = `Ends in: <span class="countdown">${formatTime(Math.ceil((close-now)/1000))}</span>`;
+            linkHTML = `<a class="start-test" href="${test.link}" target="_blank"><i class="fas fa-play"></i> Start Test</a>`;
+        } else{
+            status='closed';
+            countdownHTML='Test Closed';
+        }
+
+        const div = document.createElement('div');
+        div.classList.add('test-card');
+        div.innerHTML = `
+            <div class="test-info">
+                <strong>${test.name}</strong>
+                <p>📅 ${day}</p>
+                <p>⏰ ${time}</p>
+                <p>${countdownHTML}</p>
+                ${linkHTML}
+            </div>
+            <div>
+                <span class="status ${status}">${status.toUpperCase()}</span>
+            </div>
+        `;
+        userView.appendChild(div);
+    });
+}
+
+function formatTime(seconds){
+    const h=Math.floor(seconds/3600);
+    const m=Math.floor((seconds%3600)/60);
+    const s=seconds%60;
+    return `${h}h ${m}m ${s}s`;
+}
+
+setInterval(renderUserView,1000);
+renderUserView();
+</script>
+</body>
+</html>
